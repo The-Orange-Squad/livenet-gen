@@ -107,3 +107,7 @@ The `/delete` route returns a message indicating whether the token was successfu
 ## License
 
 This project is licensed under the BSD-3 Clause License - see the [LICENSE](LICENSE) file for details.
+
+## The Orange Squad
+
+Join The Orange Squad [Discord server](https://discord.gg/4nVVhh29E3) to learn more about the Orange Squad Live Networking project.
