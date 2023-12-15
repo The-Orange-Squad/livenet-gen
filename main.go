@@ -52,20 +52,25 @@ func LoadTokens() {
 		log.Fatal(err)
 	}
 
-	var tokens []Token
-	err = json.Unmarshal(data, &tokens)
+	var tokensMap map[string]Token  // Change the type to map[string]Token
+	err = json.Unmarshal(data, &tokensMap)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Convert the array to a map with integer keys
+	// Convert the map with string keys to a map with integer keys
 	intTokens := make(map[int]Token)
-	for _, token := range tokens {
-		intTokens[token.ID] = token
+	for key, token := range tokensMap {
+		id, err := strconv.Atoi(key)
+		if err != nil {
+			log.Fatal(err)
+		}
+		intTokens[id] = token
 	}
 
 	Tokens = intTokens
 }
+
 
 // SaveTokens writes the tokens map to the livenet_t.json file
 func SaveTokens() {
@@ -78,7 +83,6 @@ func SaveTokens() {
 		log.Fatal(err)
 	}
 }
-
 // GetHandler handles the GET requests and tries to retrieve a token for the given user ID
 func GetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -142,6 +146,33 @@ func RewriteHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// DeleteHandler handles the DELETE requests and deletes the token for the given user ID
+// Sample data: {"1":{"id":1,"value":"abc123..."},"2":{"id":2,"value":"def456..."},"3":{"id":0,"value":"wx6rKaDY53dcUeaN8a4NqyXKjK0c5z3sYAcnWimNfzZvsY7Xqos92l4enlms3bJYGqvHmCdanZMFydfwRbF7QU3hxBl9lO4aEqJXKEoAbfAIGo2KtSJiIGNbElZM6lk3"},"4":{"id":0,"value":"cBVOXXuvcFYt6gTu5zNpiGNF7MsYomfMB2Xt1oNHFrbCz1AlePf4mS6pdoTvP7YQY5afSft6DR3eDKD2YcVCocBwLD19EK6aIx2uRwuXbNQXWzmR5Li7gLvMpkkb8JWW"}}
+func DeleteHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	_, ok := Tokens[id]
+	if !ok {
+		http.Error(w, "No token found for this user ID", http.StatusNotFound)
+		return
+	}
+
+	// Delete the token for the given user ID
+	delete(Tokens, id)
+	SaveTokens()
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Token deleted successfully"})
+}
+
+
+
 func main() {
 	// Load the tokens from the file
 	LoadTokens()
@@ -153,6 +184,7 @@ func main() {
 	r.HandleFunc("/get/{id}", GetHandler).Methods("GET")
 	r.HandleFunc("/set/{id}", SetHandler).Methods("GET")        // Change "SET" to "POST"
 	r.HandleFunc("/rewrite/{id}", RewriteHandler).Methods("GET") // Change "REWRITE" to "POST"
+	r.HandleFunc("/delete/{id}", DeleteHandler).Methods("GET")   // Change "DELETE" to "POST"
 
 	// Start the server
 	fmt.Println("Server is listening on port 8080")
