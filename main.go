@@ -147,7 +147,6 @@ func RewriteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteHandler handles the DELETE requests and deletes the token for the given user ID
-// Sample data: {"1":{"id":1,"value":"abc123..."},"2":{"id":2,"value":"def456..."},"3":{"id":0,"value":"wx6rKaDY53dcUeaN8a4NqyXKjK0c5z3sYAcnWimNfzZvsY7Xqos92l4enlms3bJYGqvHmCdanZMFydfwRbF7QU3hxBl9lO4aEqJXKEoAbfAIGo2KtSJiIGNbElZM6lk3"},"4":{"id":0,"value":"cBVOXXuvcFYt6gTu5zNpiGNF7MsYomfMB2Xt1oNHFrbCz1AlePf4mS6pdoTvP7YQY5afSft6DR3eDKD2YcVCocBwLD19EK6aIx2uRwuXbNQXWzmR5Li7gLvMpkkb8JWW"}}
 func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
