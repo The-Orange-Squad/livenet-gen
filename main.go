@@ -13,6 +13,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// ErrorResponse is a struct for representing error responses
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+// TokenResponse is a struct for representing token responses
+type TokenResponse struct {
+	Token string `json:"token"`
+}
+
 // Token is a struct that holds a 128-symbol alphanumeric string
 type Token struct {
 	ID    int    `json:"id"`
@@ -39,24 +49,23 @@ func GenerateToken() Token {
 func LoadTokens() {
 	data, err := ioutil.ReadFile("livenet_t.json")
 	if err != nil {
-	   log.Fatal(err)
+		log.Fatal(err)
 	}
- 
+
 	var tokens []Token
 	err = json.Unmarshal(data, &tokens)
 	if err != nil {
-	   log.Fatal(err)
+		log.Fatal(err)
 	}
- 
+
 	// Convert the array to a map with integer keys
 	intTokens := make(map[int]Token)
 	for _, token := range tokens {
-	   intTokens[token.ID] = token
+		intTokens[token.ID] = token
 	}
- 
+
 	Tokens = intTokens
- }
- 
+}
 
 // SaveTokens writes the tokens map to the livenet_t.json file
 func SaveTokens() {
@@ -83,8 +92,10 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No token found for this user ID", http.StatusNotFound)
 		return
 	}
+
+	response := TokenResponse{Token: token.Value}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(token)
+	json.NewEncoder(w).Encode(response)
 }
 
 // SetHandler handles the SET requests and generates a new token for the given user ID
@@ -103,8 +114,10 @@ func SetHandler(w http.ResponseWriter, r *http.Request) {
 	token := GenerateToken()
 	Tokens[id] = token
 	SaveTokens()
+
+	response := TokenResponse{Token: token.Value}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(token)
+	json.NewEncoder(w).Encode(response)
 }
 
 // RewriteHandler handles the REWRITE requests and re-generates a token for the given user ID
@@ -123,8 +136,10 @@ func RewriteHandler(w http.ResponseWriter, r *http.Request) {
 	token := GenerateToken()
 	Tokens[id] = token
 	SaveTokens()
+
+	response := TokenResponse{Token: token.Value}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(token)
+	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
@@ -136,8 +151,8 @@ func main() {
 
 	// Register the routes and handlers
 	r.HandleFunc("/get/{id}", GetHandler).Methods("GET")
-	r.HandleFunc("/set/{id}", SetHandler).Methods("SET")
-	r.HandleFunc("/rewrite/{id}", RewriteHandler).Methods("REWRITE")
+	r.HandleFunc("/set/{id}", SetHandler).Methods("GET")        // Change "SET" to "POST"
+	r.HandleFunc("/rewrite/{id}", RewriteHandler).Methods("GET") // Change "REWRITE" to "POST"
 
 	// Start the server
 	fmt.Println("Server is listening on port 8080")
